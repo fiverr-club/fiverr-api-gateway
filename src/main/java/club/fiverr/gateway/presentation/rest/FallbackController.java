@@ -9,13 +9,35 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/fallback")
 public class FallbackController {
 
-    @GetMapping("/{serviceName}")
+    @GetMapping("/")
+    public Mono<ResponseEntity<Map<String, Object>>> gatewayStatus() {
+        Map<String, Object> payload = Map.of(
+                "service", "fiverr-api-gateway",
+                "brand", "fiverrex",
+                "status", "UP",
+                "timestamp", Instant.now().toString(),
+                "routes", List.of(
+                        "/api/v1/auth/**",
+                        "/api/v1/users/**",
+                        "/api/v1/sellers/**",
+                        "/api/v1/gigs/**",
+                        "/api/v1/orders/**",
+                        "/api/v1/payments/**",
+                        "/api/v1/messages/**",
+                        "/api/v1/reviews/**",
+                        "/api/v1/notifications/**"
+                )
+        );
+        return Mono.just(ResponseEntity.ok(payload));
+    }
+
+    @GetMapping("/fallback/{serviceName}")
     public Mono<ResponseEntity<Map<String, Object>>> serviceFallback(@PathVariable String serviceName) {
         Map<String, Object> payload = Map.of(
                 "timestamp", Instant.now().toString(),

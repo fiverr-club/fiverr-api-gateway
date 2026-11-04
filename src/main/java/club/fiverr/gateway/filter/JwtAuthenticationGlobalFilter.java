@@ -66,6 +66,9 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicPath(String path) {
+        if ("/".equals(path)) {
+            return true;
+        }
         return publicPaths.stream().anyMatch(path::startsWith);
     }
 
