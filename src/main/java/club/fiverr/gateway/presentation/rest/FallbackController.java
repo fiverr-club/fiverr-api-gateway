@@ -19,8 +19,10 @@ public class FallbackController {
     public Mono<ResponseEntity<Map<String, Object>>> gatewayStatus() {
         Map<String, Object> payload = Map.of(
                 "service", "fiverr-api-gateway",
-                "brand", "fiverrex",
+                "brand", "FIVERREX",
                 "status", "UP",
+                "swaggerUi", "http://localhost:8080/swagger-ui/index.html",
+                "openApiDocs", "http://localhost:8080/v3/api-docs",
                 "timestamp", Instant.now().toString(),
                 "routes", List.of(
                         "/api/v1/auth/**",

@@ -1,0 +1,534 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "FIVERREX. API Gateway — Microservices OpenAPI 3.0 Specification",
+    "version": "1.0.0",
+    "description": "Unified API Gateway (`http://localhost:8080`) routing to all 8 **FIVERREX** DDD Hexagonal Microservices (`Auth`, `User Profile`, `Gig Catalog`, `Order & Escrow`, `Payment & Wallet`, `Messaging`, `Review`, `Notification`)."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "FIVERREX API Gateway (Local / Docker Compose)"
+    }
+  ],
+  "tags": [
+    { "name": "0. Gateway & Health", "description": "API Gateway status, health probes & circuit breaker fallbacks (:8080)" },
+    { "name": "1. Auth / IAM Service", "description": "Account registration, JWT login, token refresh & password management (:8081)" },
+    { "name": "2. User & Seller Profile Service", "description": "Buyer/Seller profiles, skills, languages & seller level progression (:8082)" },
+    { "name": "3. Gig Catalog & Search Service", "description": "Gig creation, 3-tier pricing packages (Basic/Standard/Premium) & search (:8083)" },
+    { "name": "4. Order & Escrow Service", "description": "Order placement, delivery submission, revision requests & order completion (:8084)" },
+    { "name": "5. Payment & Seller Wallet Service", "description": "Escrow hold, 80/20 release split & seller wallet withdrawals (:8085)" },
+    { "name": "6. Messaging & Chat Service", "description": "Real-time buyer-seller messages, attachments & custom offers (:8086)" },
+    { "name": "7. Review & Rating Service", "description": "Verified order 3-criteria reviews & seller responses (:8087)" },
+    { "name": "8. Notification Service", "description": "Event-driven multi-channel notifications (In-App, Email, Push) (:8088)" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Paste JWT accessToken from POST /api/v1/auth/login or /api/v1/auth/register"
+      }
+    }
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["0. Gateway & Health"],
+        "summary": "Get API Gateway status and route catalog",
+        "responses": {
+          "200": { "description": "Gateway is UP" }
+        }
+      }
+    },
+    "/actuator/health": {
+      "get": {
+        "tags": ["0. Gateway & Health"],
+        "summary": "Get Kubernetes Liveness & Readiness Health Status",
+        "responses": {
+          "200": { "description": "Healthy" }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": ["1. Auth / IAM Service"],
+        "summary": "Register a new FIVERREX account (Buyer / Seller)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "founder@fiverrex.club",
+                "username": "founder_dev",
+                "password": "StrongPassword2026!",
+                "role": "SELLER"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Account created and JWT tokens issued" }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": ["1. Auth / IAM Service"],
+        "summary": "Authenticate with email/username and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "emailOrUsername": "founder@fiverrex.club",
+                "password": "StrongPassword2026!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Access and refresh JWT tokens" }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": ["1. Auth / IAM Service"],
+        "summary": "Refresh access token using refresh token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "refreshToken": "eyJhbGciOiJIUzI1NiJ9..."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "New token pair issued" }
+        }
+      }
+    },
+    "/api/v1/auth/accounts/{id}": {
+      "get": {
+        "tags": ["1. Auth / IAM Service"],
+        "summary": "Get account details by UUID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Account details" }
+        }
+      }
+    },
+    "/api/v1/sellers": {
+      "get": {
+        "tags": ["2. User & Seller Profile Service"],
+        "summary": "List all active seller profiles",
+        "responses": {
+          "200": { "description": "List of seller profiles" }
+        }
+      }
+    },
+    "/api/v1/profiles": {
+      "post": {
+        "tags": ["2. User & Seller Profile Service"],
+        "summary": "Create a user/seller profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "accountId": "11111111-1111-1111-1111-111111111111",
+                "username": "alex_architect",
+                "displayName": "Alex Rivera",
+                "headline": "Principal Java 21 Spring Boot DDD & Kubernetes Architect",
+                "bio": "10+ years building high-throughput microservices and cloud-native platforms.",
+                "country": "United States",
+                "AvatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
+                "skills": ["Java 21", "Spring Boot 3", "DDD", "Kubernetes", "Kafka"],
+                "languages": ["English", "Vietnamese"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Profile created" }
+        }
+      }
+    },
+    "/api/v1/profiles/{id}": {
+      "get": {
+        "tags": ["2. User & Seller Profile Service"],
+        "summary": "Get profile by UUID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Profile found" }
+        }
+      }
+    },
+    "/api/v1/users/{username}": {
+      "get": {
+        "tags": ["2. User & Seller Profile Service"],
+        "summary": "Get profile by username",
+        "parameters": [
+          { "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Profile found" }
+        }
+      }
+    },
+    "/api/v1/gigs": {
+      "get": {
+        "tags": ["3. Gig Catalog & Search Service"],
+        "summary": "List or search gigs in catalog",
+        "parameters": [
+          { "name": "keyword", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of gigs" }
+        }
+      },
+      "post": {
+        "tags": ["3. Gig Catalog & Search Service"],
+        "summary": "Create a new Gig with 3-Tier Pricing Packages (BASIC, STANDARD, PREMIUM)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "sellerId": "11111111-1111-1111-1111-111111111111",
+                "title": "I will architect Java 21 Spring Boot DDD microservices and K8s Helm charts",
+                "category": "Programming & Tech",
+                "description": "End-to-end hexagonal microservices with PostgreSQL, Redis, Kafka, and Kubernetes.",
+                "packages": [
+                  {
+                    "tier": "BASIC",
+                    "title": "Single DDD Service",
+                    "description": "1 Spring Boot 3 DDD microservice with unit tests and Dockerfile",
+                    "price": 195.00,
+                    "deliveryDays": 3,
+                    "revisions": 2
+                  },
+                  {
+                    "tier": "STANDARD",
+                    "title": "3 Microservices + API Gateway",
+                    "description": "3 DDD services + Spring Cloud Gateway + Docker Compose",
+                    "price": 495.00,
+                    "deliveryDays": 5,
+                    "revisions": 5
+                  },
+                  {
+                    "tier": "PREMIUM",
+                    "title": "Full Ecosystem + K8s Helm",
+                    "description": "Complete microservices platform + Kafka + K8s/Helm production deployment",
+                    "price": 995.00,
+                    "deliveryDays": 7,
+                    "revisions": 10
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Gig created" }
+        }
+      }
+    },
+    "/api/v1/gigs/search": {
+      "get": {
+        "tags": ["3. Gig Catalog & Search Service"],
+        "summary": "Search gigs by keyword and category",
+        "parameters": [
+          { "name": "keyword", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Matching gigs" }
+        }
+      }
+    },
+    "/api/v1/gigs/{gigId}": {
+      "get": {
+        "tags": ["3. Gig Catalog & Search Service"],
+        "summary": "Get gig details by UUID",
+        "parameters": [
+          { "name": "gigId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Gig details" }
+        }
+      }
+    },
+    "/api/v1/orders": {
+      "post": {
+        "tags": ["4. Order & Escrow Service"],
+        "summary": "Place a new order and lock funds in Escrow",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "gigId": "22222222-2222-2222-2222-222222222222",
+                "buyerId": "33333333-3333-3333-3333-333333333333",
+                "sellerId": "11111111-1111-1111-1111-111111111111",
+                "packageTier": "PREMIUM",
+                "amount": 995.00,
+                "requirements": "Deploy on EKS with Helm v3 and DDD repository pattern",
+                "deliveryDays": 7
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Order created and escrow held" }
+        }
+      }
+    },
+    "/api/v1/orders/{orderId}/deliver": {
+      "post": {
+        "tags": ["4. Order & Escrow Service"],
+        "summary": "Submit work delivery for an active order",
+        "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "deliveryNote": "Completed all 9 microservices and Helm charts.",
+                "attachmentUrl": "https://github.com/fiverr-club"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order marked as DELIVERED" }
+        }
+      }
+    },
+    "/api/v1/orders/{orderId}/revisions": {
+      "post": {
+        "tags": ["4. Order & Escrow Service"],
+        "summary": "Request a revision on a delivered order",
+        "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "reason": "Please add Swagger UI on the API Gateway."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order moved to REVISION_REQUESTED" }
+        }
+      }
+    },
+    "/api/v1/orders/{orderId}/complete": {
+      "post": {
+        "tags": ["4. Order & Escrow Service"],
+        "summary": "Approve delivery and release escrow to seller wallet",
+        "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "buyerId": "33333333-3333-3333-3333-333333333333"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order COMPLETED and escrow released" }
+        }
+      }
+    },
+    "/api/v1/payments/escrow/hold": {
+      "post": {
+        "tags": ["5. Payment & Seller Wallet Service"],
+        "summary": "Hold buyer payment in Escrow (20% platform fee, 80% seller payout)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "orderId": "44444444-4444-4444-4444-444444444444",
+                "buyerId": "33333333-3333-3333-3333-333333333333",
+                "sellerId": "11111111-1111-1111-1111-111111111111",
+                "grossAmount": 500.00
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Escrow transaction held" }
+        }
+      }
+    },
+    "/api/v1/payments/escrow/release": {
+      "post": {
+        "tags": ["5. Payment & Seller Wallet Service"],
+        "summary": "Release held escrow funds to Seller Wallet",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "escrowTransactionId": "55555555-5555-5555-5555-555555555555"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Escrow released and seller wallet credited" }
+        }
+      }
+    },
+    "/api/v1/payments/wallets/withdraw": {
+      "post": {
+        "tags": ["5. Payment & Seller Wallet Service"],
+        "summary": "Withdraw available balance from Seller Wallet",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "sellerId": "11111111-1111-1111-1111-111111111111",
+                "amount": 250.00
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Withdrawal processed" }
+        }
+      }
+    },
+    "/api/v1/messages": {
+      "post": {
+        "tags": ["6. Messaging & Chat Service"],
+        "summary": "Send a real-time message or custom offer in a conversation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "conversationId": "66666666-6666-6666-6666-666666666666",
+                "senderId": "33333333-3333-3333-3333-333333333333",
+                "recipientId": "11111111-1111-1111-1111-111111111111",
+                "content": "Hi! Can we include Kubernetes HPA and Ingress in the package?",
+                "messageType": "TEXT"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Message sent and broadcast over WebSocket" }
+        }
+      }
+    },
+    "/api/v1/messages/conversations/{conversationId}": {
+      "get": {
+        "tags": ["6. Messaging & Chat Service"],
+        "summary": "Get messages in a conversation thread",
+        "parameters": [
+          { "name": "conversationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "List of messages" }
+        }
+      }
+    },
+    "/api/v1/reviews": {
+      "post": {
+        "tags": ["7. Review & Rating Service"],
+        "summary": "Submit a verified 3-criteria order review",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "orderId": "44444444-4444-4444-4444-444444444444",
+                "gigId": "22222222-2222-2222-2222-222222222222",
+                "buyerId": "33333333-3333-3333-3333-333333333333",
+                "sellerId": "11111111-1111-1111-1111-111111111111",
+                "communicationRating": 5,
+                "serviceAsDescribedRating": 5,
+                "buyAgainRecommendRating": 5,
+                "comment": "Flawless DDD Hexagonal architecture and Kubernetes deployment!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Review submitted" }
+        }
+      }
+    },
+    "/api/v1/reviews/gig/{gigId}": {
+      "get": {
+        "tags": ["7. Review & Rating Service"],
+        "summary": "Get all verified reviews for a Gig",
+        "parameters": [
+          { "name": "gigId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "List of reviews" }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "post": {
+        "tags": ["8. Notification Service"],
+        "summary": "Dispatch a multi-channel notification (IN_APP, EMAIL, PUSH)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "recipientUserId": "11111111-1111-1111-1111-111111111111",
+                "type": "ORDER_CREATED",
+                "title": "New FIVERREX Order Placed!",
+                "message": "Order #FVX-9012 has been funded in Escrow.",
+                "channel": "IN_APP"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Notification sent" }
+        }
+      }
+    },
+    "/api/v1/notifications/users/{recipientUserId}": {
+      "get": {
+        "tags": ["8. Notification Service"],
+        "summary": "Get notifications for a user",
+        "parameters": [
+          { "name": "recipientUserId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "User notifications" }
+        }
+      }
+    }
+  }
+}
+
