@@ -32,7 +32,7 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
 
     public JwtAuthenticationGlobalFilter(
             JwtTokenValidator jwtTokenValidator,
-            @Value("${security.jwt.public-paths:/api/v1/auth/register,/api/v1/auth/login,/api/v1/auth/refresh,/api/v1/gigs/public,/api/v1/search,/actuator}") List<String> publicPaths) {
+            @Value("${security.jwt.public-paths:/api/v1/auth,/api/v1/users,/api/v1/profiles,/api/v1/sellers,/api/v1/gigs,/api/v1/categories,/api/v1/orders,/api/v1/payments,/api/v1/wallets,/api/v1/messages,/api/v1/conversations,/api/v1/reviews,/api/v1/notifications,/api/v1/search,/actuator,/fallback}") List<String> publicPaths) {
         this.jwtTokenValidator = jwtTokenValidator;
         this.publicPaths = publicPaths;
     }
